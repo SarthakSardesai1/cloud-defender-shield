@@ -17,12 +17,16 @@ export default {
         'cyber-accent': '#0288d1',
         'cyber-dark': '#121212',
         'cyber-light': '#2d2d2d',
+        border: "hsl(var(--border))",
       },
       backgroundImage: {
         'cyber-gradient': 'linear-gradient(to right, #121212, #1a237e)',
       },
       fontFamily: {
         'cyber': ['Inter', 'sans-serif'],
+      },
+      borderColor: {
+        DEFAULT: "hsl(var(--border))",
       },
     },
   },
