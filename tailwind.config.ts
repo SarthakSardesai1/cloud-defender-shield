@@ -18,6 +18,16 @@ export default {
         'cyber-dark': '#121212',
         'cyber-light': '#2d2d2d',
         border: "hsl(var(--border))",
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        primary: {
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
+        },
+        secondary: {
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
+        },
       },
       backgroundImage: {
         'cyber-gradient': 'linear-gradient(to right, #121212, #1a237e)',
