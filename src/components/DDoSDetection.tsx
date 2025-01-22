@@ -1,22 +1,50 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { Shield, AlertTriangle } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+
+interface SystemStatus {
+  cpu_usage: number;
+  memory_usage: number;
+  network_load: number;
+  active_servers: number;
+  response_time: number;
+}
+
+interface TrafficData {
+  traffic_level: number;
+  is_attack: boolean;
+  timestamp: string;
+}
 
 const DDoSDetection = () => {
-  const [threatLevel, setThreatLevel] = useState(0);
-  const [isUnderAttack, setIsUnderAttack] = useState(false);
+  const { data: trafficData } = useQuery<TrafficData>({
+    queryKey: ['traffic'],
+    queryFn: async () => {
+      const response = await fetch('/api/traffic');
+      if (!response.ok) {
+        throw new Error('Failed to fetch traffic data');
+      }
+      return response.json();
+    },
+    refetchInterval: 2000
+  });
 
-  useEffect(() => {
-    // Simulate threat detection
-    const interval = setInterval(() => {
-      const newThreatLevel = Math.random() * 100;
-      setThreatLevel(newThreatLevel);
-      setIsUnderAttack(newThreatLevel > 70);
-    }, 2000);
+  const { data: systemStatus } = useQuery<SystemStatus>({
+    queryKey: ['system-status'],
+    queryFn: async () => {
+      const response = await fetch('/api/system-status');
+      if (!response.ok) {
+        throw new Error('Failed to fetch system status');
+      }
+      return response.json();
+    },
+    refetchInterval: 2000
+  });
 
-    return () => clearInterval(interval);
-  }, []);
+  const threatLevel = systemStatus?.network_load || 0;
+  const isUnderAttack = trafficData?.is_attack || false;
 
   return (
     <div>
@@ -47,15 +75,19 @@ const DDoSDetection = () => {
               <Shield className="text-cyber-secondary" />
               <span className="text-white">Protection Status</span>
             </div>
-            <span className="text-cyber-secondary">Active</span>
+            <span className="text-cyber-secondary">
+              {systemStatus?.active_servers ? 'Active' : 'Initializing...'}
+            </span>
           </div>
           
           <div className="bg-cyber-light p-4 rounded-lg">
             <div className="flex items-center gap-2">
               <AlertTriangle className="text-cyber-secondary" />
-              <span className="text-white">Blocked Attacks</span>
+              <span className="text-white">Response Time</span>
             </div>
-            <span className="text-cyber-secondary">{Math.floor(Math.random() * 1000)}</span>
+            <span className="text-cyber-secondary">
+              {systemStatus?.response_time || 0}ms
+            </span>
           </div>
         </div>
       </div>
