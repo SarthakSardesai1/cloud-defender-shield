@@ -5,12 +5,11 @@ from datetime import datetime
 import random
 from typing import List, Dict
 import numpy as np
-from .ddos_detector import DDoSDetector
-from .load_balancer import LoadBalancer
-from .recovery_system import RecoverySystem
+from ddos_detector import DDoSDetector
+from load_balancer import LoadBalancer
+from recovery_system import RecoverySystem
 import logging
 
-# Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
