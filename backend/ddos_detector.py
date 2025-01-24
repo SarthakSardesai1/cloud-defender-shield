@@ -33,7 +33,7 @@ class ProofOfWork:
 
 class DDoSDetector:
     def __init__(self):
-        self.request_window = deque(maxlen=1000)
+        self.request_window = deque(maxlen=100)  # Changed to match expected input shape
         self.scaler = StandardScaler()
         self.pow_validator = ProofOfWork()
         self.setup_lstm_model()
@@ -49,41 +49,55 @@ class DDoSDetector:
         
     def extract_features(self, request):
         return [
-            request.get('request_per_second', 0),
-            request.get('bytes_transferred', 0),
-            request.get('connection_duration', 0)
+            float(request.get('request_per_second', 0)),
+            float(request.get('bytes_transferred', 0)),
+            float(request.get('connection_duration', 0))
         ]
     
     def prepare_sequence_data(self):
-        if len(self.request_window) < 100:
+        if len(self.request_window) < 100:  # Check if we have enough data
             return None
+            
+        # Convert deque to numpy array and ensure we have exactly 100 samples
+        X = np.array(list(self.request_window))[-100:]
         
-        X = np.array(list(self.request_window))
-        X = self.scaler.fit_transform(X)
-        X = X.reshape(1, 100, 3)
-        return X
+        # Ensure we have the correct shape before scaling
+        if X.shape != (100, 3):
+            return None
+            
+        # Scale the features
+        X_scaled = self.scaler.fit_transform(X)
+        
+        # Reshape for LSTM input (batch_size, timesteps, features)
+        X_reshaped = X_scaled.reshape(1, 100, 3)
+        return X_reshaped
     
     def is_attack(self, request):
         """Determine if current traffic pattern indicates a DDoS attack"""
-        features = self.extract_features(request)
-        self.request_window.append(features)
-        
-        # Basic statistical analysis
-        if len(self.request_window) < 100:
-            return self._basic_detection(features)
+        try:
+            features = self.extract_features(request)
+            self.request_window.append(features)
             
-        # LSTM-based detection
-        X = self.prepare_sequence_data()
-        if X is None:
+            # Basic statistical analysis for small window sizes
+            if len(self.request_window) < 100:
+                return self._basic_detection(features)
+                
+            # LSTM-based detection
+            X = self.prepare_sequence_data()
+            if X is None:
+                return self._basic_detection(features)
+                
+            prediction = self.model.predict(X, verbose=0)[0][0]
+            
+            if prediction > self.attack_threshold:
+                self._log_attack(request, prediction)
+                return True
+                
             return False
             
-        prediction = self.model.predict(X, verbose=0)[0][0]
-        
-        if prediction > self.attack_threshold:
-            self._log_attack(request, prediction)
-            return True
-            
-        return False
+        except Exception as e:
+            logging.error(f"Error in DDoS detection: {str(e)}")
+            return self._basic_detection(features)  # Fallback to basic detection
     
     def _basic_detection(self, features):
         """Fallback detection method when not enough data for LSTM"""
