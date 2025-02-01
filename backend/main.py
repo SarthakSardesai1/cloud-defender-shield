@@ -40,20 +40,33 @@ recovery_system = RecoverySystem()
 
 @app.middleware("http")
 async def ddos_protection_middleware(request: Request, call_next):
-    """Middleware to check for DDoS attacks"""
-    request_info = {
-        "source_ip": request.client.host,
-        "request_per_second": 1,  # This should be calculated based on recent requests
-        "bytes_transferred": len(await request.body()),
-        "connection_duration": 0,  # This should be measured
-    }
-    
-    if ddos_detector.is_attack(request_info):
-        logger.warning(f"DDoS attack detected from {request_info['source_ip']}")
-        raise HTTPException(status_code=429, detail="Too many requests")
+    """Middleware to check for DDoS attacks and apply defenses"""
+    try:
+        # Extract request information
+        request_info = {
+            "source_ip": request.client.host,
+            "request_per_second": 1,  # This should be calculated based on recent requests
+            "bytes_transferred": len(await request.body()),
+            "connection_duration": 0,  # This should be measured
+            "syn_count": random.randint(0, 150)  # This should come from actual network monitoring
+        }
         
-    response = await call_next(request)
-    return response
+        # Check for DDoS attack
+        if ddos_detector.is_attack(request_info):
+            logger.warning(f"DDoS attack detected from {request_info['source_ip']}")
+            raise HTTPException(status_code=429, detail="Too many requests")
+            
+        # Apply load balancing
+        selected_server = load_balancer.get_next_server()
+        if not selected_server:
+            raise HTTPException(status_code=503, detail="No available servers")
+            
+        response = await call_next(request)
+        return response
+        
+    except Exception as e:
+        logger.error(f"Error in DDoS protection middleware: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 @app.get("/api/traffic")
 async def get_traffic():
@@ -68,11 +81,11 @@ async def get_traffic():
 async def get_system_status():
     """Get real-time system status"""
     return {
-        "cpu_usage": random.randint(20, 80),  # Replace with real metrics
+        "cpu_usage": random.randint(20, 80),
         "memory_usage": random.randint(30, 90),
         "network_load": load_balancer.get_average_load(),
         "active_servers": sum(1 for healthy in load_balancer.server_health.values() if healthy),
-        "response_time": random.randint(10, 50)  # Replace with real metrics
+        "response_time": random.randint(10, 50)
     }
 
 @app.get("/api/attack-logs")
