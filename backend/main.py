@@ -84,6 +84,31 @@ async def ddos_protection_middleware(request: Request, call_next):
         logger.error(f"Error in DDoS protection middleware: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
+@app.get("/api/traffic")
+async def get_traffic():
+    """Get current traffic metrics and attack status"""
+    try:
+        # Generate simulated traffic data
+        current_traffic = random.randint(50, 1000)
+        
+        # Check if current traffic indicates an attack
+        is_attack = ddos_detector.is_attack({
+            "source_ip": "0.0.0.0",
+            "request_per_second": current_traffic,
+            "bytes_transferred": random.randint(1000, 10000),
+            "connection_duration": random.randint(1, 10),
+            "syn_count": random.randint(0, 150)
+        })
+        
+        return {
+            "traffic_level": current_traffic,
+            "is_attack": is_attack,
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Error getting traffic data: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error fetching traffic data")
+
 @app.get("/api/system-metrics")
 async def get_system_metrics():
     """Get enhanced system metrics including cloud and optimization data"""
@@ -106,8 +131,6 @@ async def get_system_metrics():
             "response_time": random.randint(10, 50)
         }
     }
-
-# ... keep existing code (other endpoints)
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
