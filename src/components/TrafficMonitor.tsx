@@ -9,6 +9,9 @@ interface TrafficData {
   timestamp: string;
 }
 
+// Get the API URL from environment or default to the current origin
+const API_URL = import.meta.env.VITE_API_URL || window.location.origin;
+
 const TrafficMonitor = () => {
   const [trafficHistory, setTrafficHistory] = useState<TrafficData[]>([]);
 
@@ -16,12 +19,13 @@ const TrafficMonitor = () => {
     queryKey: ['traffic'],
     queryFn: async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/traffic');
+        const response = await fetch(`${API_URL}/api/traffic`);
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
         return response.json() as Promise<TrafficData>;
       } catch (error) {
+        console.error('Error fetching traffic data:', error);
         // Provide fallback data when API is unavailable
         return {
           traffic_level: Math.floor(Math.random() * 100),
