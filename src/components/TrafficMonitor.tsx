@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useQuery } from '@tanstack/react-query';
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useToast } from "@/components/ui/use-toast";
 
 interface TrafficData {
   traffic_level: number;
@@ -9,11 +10,24 @@ interface TrafficData {
   timestamp: string;
 }
 
-// Get the API URL from environment or default to the current origin
 const API_URL = import.meta.env.VITE_API_URL || window.location.origin;
 
 const TrafficMonitor = () => {
   const [trafficHistory, setTrafficHistory] = useState<TrafficData[]>([]);
+  const { toast } = useToast();
+
+  // Generate fallback data for development and error cases
+  const generateFallbackData = (): TrafficData => ({
+    traffic_level: Math.floor(Math.random() * (1000 - 50) + 50),
+    is_attack: Math.random() > 0.9,
+    timestamp: new Date().toISOString()
+  });
+
+  // Initialize with some fallback data
+  useEffect(() => {
+    const initialData = Array.from({ length: 10 }, () => generateFallbackData());
+    setTrafficHistory(initialData);
+  }, []);
 
   const { data: trafficData, error, isError } = useQuery({
     queryKey: ['traffic'],
@@ -26,15 +40,18 @@ const TrafficMonitor = () => {
         return response.json() as Promise<TrafficData>;
       } catch (error) {
         console.error('Error fetching traffic data:', error);
-        // Provide fallback data when API is unavailable
-        return {
-          traffic_level: Math.floor(Math.random() * 100),
-          is_attack: false,
-          timestamp: new Date().toISOString()
-        } as TrafficData;
+        return generateFallbackData();
       }
     },
     refetchInterval: 1000,
+    retry: 3,
+    onError: () => {
+      toast({
+        title: "Connection Error",
+        description: "Unable to connect to monitoring server. Showing simulated data.",
+        variant: "destructive",
+      });
+    }
   });
 
   useEffect(() => {
