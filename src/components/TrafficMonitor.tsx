@@ -45,12 +45,14 @@ const TrafficMonitor = () => {
     },
     refetchInterval: 1000,
     retry: 3,
-    onError: () => {
-      toast({
-        title: "Connection Error",
-        description: "Unable to connect to monitoring server. Showing simulated data.",
-        variant: "destructive",
-      });
+    meta: {
+      onError: () => {
+        toast({
+          title: "Connection Error",
+          description: "Unable to connect to monitoring server. Showing simulated data.",
+          variant: "destructive",
+        });
+      }
     }
   });
 
