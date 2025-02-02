@@ -1,7 +1,7 @@
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense
+from tensorflow.keras.layers import LSTM, Dense, Input
 from collections import deque
 import logging
 from typing import List, Optional, Dict, Any
@@ -16,11 +16,16 @@ class AttackDetector:
         
     def setup_lstm_model(self):
         self.model = Sequential([
-            LSTM(64, input_shape=(100, 3), return_sequences=True),
+            Input(shape=(100, 3)),  # Explicitly define input shape
+            LSTM(64, return_sequences=True),
             LSTM(32),
             Dense(1, activation='sigmoid')
         ])
-        self.model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+        self.model.compile(
+            optimizer='adam',
+            loss='binary_crossentropy',
+            metrics=['accuracy']
+        )
         
     def extract_features(self, request: Dict[str, Any]) -> List[float]:
         rps = float(request.get('request_per_second', 0))
