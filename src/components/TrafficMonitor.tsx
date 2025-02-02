@@ -10,7 +10,8 @@ interface TrafficData {
   timestamp: string;
 }
 
-const API_URL = import.meta.env.VITE_API_URL || window.location.origin;
+// Ensure API_URL ends with a trailing slash
+const API_URL = (import.meta.env.VITE_API_URL || window.location.origin).replace(/\/?$/, '/');
 
 const TrafficMonitor = () => {
   const [trafficHistory, setTrafficHistory] = useState<TrafficData[]>([]);
@@ -33,27 +34,28 @@ const TrafficMonitor = () => {
     queryKey: ['traffic'],
     queryFn: async () => {
       try {
-        const response = await fetch(`${API_URL}/api/traffic`);
+        console.log('Fetching traffic data from:', `${API_URL}api/traffic`);
+        const response = await fetch(`${API_URL}api/traffic`);
         if (!response.ok) {
-          throw new Error('Network response was not ok');
+          console.error('Server response not OK:', response.status, response.statusText);
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
-        return response.json() as Promise<TrafficData>;
+        const data = await response.json();
+        console.log('Received traffic data:', data);
+        return data as TrafficData;
       } catch (error) {
         console.error('Error fetching traffic data:', error);
-        return generateFallbackData();
-      }
-    },
-    refetchInterval: 1000,
-    retry: 3,
-    meta: {
-      onError: () => {
+        // Show toast on error
         toast({
           title: "Connection Error",
           description: "Unable to connect to monitoring server. Showing simulated data.",
           variant: "destructive",
         });
+        return generateFallbackData();
       }
-    }
+    },
+    refetchInterval: 1000,
+    retry: 3
   });
 
   useEffect(() => {
