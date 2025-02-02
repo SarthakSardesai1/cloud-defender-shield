@@ -1,9 +1,9 @@
 import logging
 import time
 from typing import Dict, Any
-from .security.proof_of_work import ProofOfWork
-from .security.defense_mechanisms import DefenseMechanisms
-from .ml.attack_detector import AttackDetector
+from security.proof_of_work import ProofOfWork
+from security.defense_mechanisms import DefenseMechanisms
+from ml.attack_detector import AttackDetector
 
 logging.basicConfig(
     level=logging.INFO,
