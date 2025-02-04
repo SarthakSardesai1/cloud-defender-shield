@@ -11,6 +11,10 @@ from recovery_system import RecoverySystem
 from cloud_integration import CloudIntegration
 from resource_optimizer import ResourceOptimizer
 import logging
+import tensorflow as tf
+
+# Disable TensorFlow warnings
+tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
 logging.basicConfig(
     level=logging.INFO,
@@ -21,10 +25,10 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
-# Enable CORS
+# Enable CORS with specific origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

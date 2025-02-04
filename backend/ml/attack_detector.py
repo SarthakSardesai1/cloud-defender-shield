@@ -7,6 +7,9 @@ from collections import deque
 import logging
 from typing import List, Optional, Dict, Any
 
+# Disable TensorFlow warnings
+tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
+
 class AttackDetector:
     def __init__(self):
         self.request_window = deque(maxlen=100)
@@ -24,7 +27,7 @@ class AttackDetector:
             Dense(1, activation='sigmoid')
         ])
         
-        optimizer = tf.keras.optimizers.legacy.Adam()
+        optimizer = tf.keras.optimizers.legacy.Adam(learning_rate=0.001)
         self.model.compile(
             optimizer=optimizer,
             loss=tf.keras.losses.BinaryCrossentropy(),

@@ -10,21 +10,16 @@ interface TrafficData {
   timestamp: string;
 }
 
-// Ensure API_URL ends with a trailing slash
-const API_URL = (import.meta.env.VITE_API_URL || window.location.origin).replace(/\/?$/, '/');
-
 const TrafficMonitor = () => {
   const [trafficHistory, setTrafficHistory] = useState<TrafficData[]>([]);
   const { toast } = useToast();
 
-  // Generate fallback data for development and error cases
   const generateFallbackData = (): TrafficData => ({
     traffic_level: Math.floor(Math.random() * (1000 - 50) + 50),
     is_attack: Math.random() > 0.9,
     timestamp: new Date().toISOString()
   });
 
-  // Initialize with some fallback data
   useEffect(() => {
     const initialData = Array.from({ length: 10 }, () => generateFallbackData());
     setTrafficHistory(initialData);
@@ -34,8 +29,8 @@ const TrafficMonitor = () => {
     queryKey: ['traffic'],
     queryFn: async () => {
       try {
-        console.log('Fetching traffic data from:', `${API_URL}api/traffic`);
-        const response = await fetch(`${API_URL}api/traffic`);
+        console.log('Fetching traffic data from:', 'http://localhost:8000/api/traffic');
+        const response = await fetch('http://localhost:8000/api/traffic');
         if (!response.ok) {
           console.error('Server response not OK:', response.status, response.statusText);
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -45,7 +40,6 @@ const TrafficMonitor = () => {
         return data as TrafficData;
       } catch (error) {
         console.error('Error fetching traffic data:', error);
-        // Show toast on error
         toast({
           title: "Connection Error",
           description: "Unable to connect to monitoring server. Showing simulated data.",
@@ -61,7 +55,7 @@ const TrafficMonitor = () => {
   useEffect(() => {
     if (trafficData) {
       setTrafficHistory(prev => {
-        const newHistory = [...prev, trafficData].slice(-20); // Keep last 20 data points
+        const newHistory = [...prev, trafficData].slice(-20);
         return newHistory;
       });
     }
