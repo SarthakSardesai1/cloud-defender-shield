@@ -1,5 +1,6 @@
 import numpy as np
 from sklearn.preprocessing import StandardScaler
+import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Input
 from collections import deque
@@ -12,18 +13,21 @@ class AttackDetector:
         self.scaler = StandardScaler()
         self.attack_threshold = 0.8
         self.syn_flood_threshold = 100
+        tf.compat.v1.disable_eager_execution()
         self.setup_lstm_model()
         
     def setup_lstm_model(self):
         self.model = Sequential([
-            Input(shape=(100, 3)),  # Explicitly define input shape
+            Input(shape=(100, 3)),
             LSTM(64, return_sequences=True),
             LSTM(32),
             Dense(1, activation='sigmoid')
         ])
+        
+        optimizer = tf.keras.optimizers.legacy.Adam()
         self.model.compile(
-            optimizer='adam',
-            loss='binary_crossentropy',
+            optimizer=optimizer,
+            loss=tf.keras.losses.BinaryCrossentropy(),
             metrics=['accuracy']
         )
         
