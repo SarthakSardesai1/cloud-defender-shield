@@ -28,13 +28,7 @@ app = FastAPI()
 # Enable CORS with specific origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://localhost:3000", 
-        "http://127.0.0.1:5173",
-        "https://6f3e5c78-1e96-4934-8dc5-b30fbda757bc.lovableproject.com",
-        "https://*.lovableproject.com"
-    ],
+    allow_origins=["*"],  # Allow all origins temporarily for testing
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -143,3 +137,4 @@ async def get_system_metrics():
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
+

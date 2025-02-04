@@ -11,7 +11,7 @@ interface TrafficData {
 }
 
 // Get API URL from environment or use a fallback
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_URL = import.meta.env.VITE_API_URL || window.location.protocol + '//' + window.location.hostname + ':8000';
 
 const TrafficMonitor = () => {
   const [trafficHistory, setTrafficHistory] = useState<TrafficData[]>([]);
@@ -34,7 +34,6 @@ const TrafficMonitor = () => {
       try {
         console.log('Fetching traffic data from:', `${API_URL}/api/traffic`);
         const response = await fetch(`${API_URL}/api/traffic`, {
-          credentials: 'include',
           headers: {
             'Accept': 'application/json',
           }
