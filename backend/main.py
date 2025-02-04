@@ -28,7 +28,7 @@ app = FastAPI()
 # Enable CORS with specific origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins temporarily for testing
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -47,25 +47,23 @@ resource_optimizer = ResourceOptimizer()
 
 @app.middleware("http")
 async def ddos_protection_middleware(request: Request, call_next):
-    """Enhanced middleware with cloud optimization"""
+    """Enhanced middleware with cloud optimization and better error handling"""
     try:
         # Get cloud metrics
-        cloud_metrics = cloud_integration.get_resource_metrics()
+        cloud_metrics = await cloud_integration.get_resource_metrics()
         
-        # Check if scaling is needed
-        if cloud_integration.should_scale(cloud_metrics):
-            logger.info("Resource scaling triggered based on metrics")
-            optimized_resources = resource_optimizer.optimize_allocation({
-                "cpu": cloud_metrics.cpu_usage,
-                "memory": cloud_metrics.memory_usage,
-                "network": cloud_metrics.network_throughput
-            })
-            
-        # Extract request information
+        # Extract request information with proper error handling
+        try:
+            body = await request.body()
+            bytes_transferred = len(body)
+        except Exception:
+            bytes_transferred = 0
+            logger.warning("Could not read request body")
+
         request_info = {
-            "source_ip": request.client.host,
+            "source_ip": request.client.host if request.client else "unknown",
             "request_per_second": 1,
-            "bytes_transferred": len(await request.body()),
+            "bytes_transferred": bytes_transferred,
             "connection_duration": 0,
             "syn_count": random.randint(0, 150)
         }
@@ -73,19 +71,20 @@ async def ddos_protection_middleware(request: Request, call_next):
         # Check for DDoS attack
         if ddos_detector.is_attack(request_info):
             logger.warning(f"DDoS attack detected from {request_info['source_ip']}")
-            raise HTTPException(status_code=429, detail="Too many requests")
+            return HTTPException(status_code=429, detail="Too many requests")
             
         # Apply load balancing
-        selected_server = load_balancer.get_next_server()
-        if not selected_server:
-            raise HTTPException(status_code=503, detail="No available servers")
+        distribution = load_balancer.distribute_request()
+        if distribution["status"] == "rejected":
+            logger.warning(f"Request rejected: {distribution['reason']}")
+            return HTTPException(status_code=503, detail=distribution["reason"])
             
         response = await call_next(request)
         return response
         
     except Exception as e:
         logger.error(f"Error in DDoS protection middleware: {str(e)}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+        return HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/traffic")
 async def get_traffic():
@@ -110,31 +109,34 @@ async def get_traffic():
         }
     except Exception as e:
         logger.error(f"Error getting traffic data: {str(e)}")
-        raise HTTPException(status_code=500, detail="Error fetching traffic data")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/system-metrics")
 async def get_system_metrics():
     """Get enhanced system metrics including cloud and optimization data"""
-    cloud_metrics = cloud_integration.get_resource_metrics()
-    optimization_metrics = resource_optimizer.get_optimization_metrics()
-    
-    return {
-        "cloud_metrics": {
-            "cpu_usage": cloud_metrics.cpu_usage,
-            "memory_usage": cloud_metrics.memory_usage,
-            "network_throughput": cloud_metrics.network_throughput,
-            "container_health": cloud_metrics.container_health
-        },
-        "optimization_metrics": optimization_metrics,
-        "system_status": {
-            "cpu_usage": random.randint(20, 80),
-            "memory_usage": random.randint(30, 90),
-            "network_load": load_balancer.get_average_load(),
-            "active_servers": sum(1 for healthy in load_balancer.server_health.values() if healthy),
-            "response_time": random.randint(10, 50)
+    try:
+        cloud_metrics = await cloud_integration.get_resource_metrics()
+        optimization_metrics = resource_optimizer.get_optimization_metrics()
+        
+        return {
+            "cloud_metrics": {
+                "cpu_usage": cloud_metrics.cpu_usage,
+                "memory_usage": cloud_metrics.memory_usage,
+                "network_throughput": cloud_metrics.network_throughput,
+                "container_health": cloud_metrics.container_health
+            },
+            "optimization_metrics": optimization_metrics,
+            "system_status": {
+                "cpu_usage": random.randint(20, 80),
+                "memory_usage": random.randint(30, 90),
+                "network_load": load_balancer.get_average_load(),
+                "active_servers": sum(1 for healthy in load_balancer.server_health.values() if healthy),
+                "response_time": random.randint(10, 50)
+            }
         }
-    }
+    except Exception as e:
+        logger.error(f"Error getting system metrics: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
-
