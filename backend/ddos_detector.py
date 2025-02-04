@@ -28,7 +28,7 @@ class DDoSDetector:
                 logging.info(f"Blocked request from blacklisted IP: {ip}")
                 return True
             
-            # Check rate limits
+            # Check rate limits - More sensitive threshold
             if self.defense.check_rate_limit(ip):
                 self.defense._apply_defense(ip, 'rate_limit_exceeded')
                 return True
@@ -36,15 +36,22 @@ class DDoSDetector:
             features = self.detector.extract_features(request)
             self.detector.request_window.append(features)
             
-            # Volume-based attack detection
-            if features[0] > 1000:  # High RPS
+            # More sensitive thresholds for demonstration
+            # Volume-based attack detection - Lower threshold
+            if features[0] > 100:  # Reduced from 1000 to 100 RPS
                 self.defense._apply_defense(ip, 'http_flood')
                 self._log_attack(request, 1.0, "High RPS detected")
                 return True
                 
-            if features[1] > 1000000:  # High bandwidth usage
+            if features[1] > 100000:  # Reduced from 1000000 to 100000 bytes
                 self.defense._apply_defense(ip, 'bandwidth_flood')
                 self._log_attack(request, 1.0, "High bandwidth usage detected")
+                return True
+
+            # SYN flood detection - More sensitive
+            if request.get('syn_count', 0) > 50:  # Reduced from default
+                self.defense._apply_defense(ip, 'syn_flood')
+                self._log_attack(request, 1.0, "SYN flood detected")
                 return True
             
             # Basic statistical analysis for small window sizes
@@ -58,7 +65,8 @@ class DDoSDetector:
                 
             prediction = self.detector.model.predict(X, verbose=0)[0][0]
             
-            if prediction > self.detector.attack_threshold:
+            # Lower threshold for demonstration
+            if prediction > 0.6:  # Reduced from 0.8
                 self.defense._apply_defense(ip, 'anomaly_detected')
                 self._log_attack(request, prediction, "LSTM model detected anomaly")
                 return True
