@@ -28,13 +28,18 @@ app = FastAPI()
 # Enable CORS with specific origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173"],
+    allow_origins=[
+        "http://localhost:5173",
+        "http://localhost:3000", 
+        "http://127.0.0.1:5173",
+        "https://6f3e5c78-1e96-4934-8dc5-b30fbda757bc.lovableproject.com",
+        "https://*.lovableproject.com"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Initialize protection systems
 ddos_detector = DDoSDetector()
 load_balancer = LoadBalancer([
     "server1.example.com",

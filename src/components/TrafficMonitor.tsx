@@ -10,6 +10,9 @@ interface TrafficData {
   timestamp: string;
 }
 
+// Get API URL from environment or use a fallback
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
 const TrafficMonitor = () => {
   const [trafficHistory, setTrafficHistory] = useState<TrafficData[]>([]);
   const { toast } = useToast();
@@ -29,8 +32,14 @@ const TrafficMonitor = () => {
     queryKey: ['traffic'],
     queryFn: async () => {
       try {
-        console.log('Fetching traffic data from:', 'http://localhost:8000/api/traffic');
-        const response = await fetch('http://localhost:8000/api/traffic');
+        console.log('Fetching traffic data from:', `${API_URL}/api/traffic`);
+        const response = await fetch(`${API_URL}/api/traffic`, {
+          credentials: 'include',
+          headers: {
+            'Accept': 'application/json',
+          }
+        });
+        
         if (!response.ok) {
           console.error('Server response not OK:', response.status, response.statusText);
           throw new Error(`HTTP error! status: ${response.status}`);
