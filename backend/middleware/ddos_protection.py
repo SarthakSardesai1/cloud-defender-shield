@@ -1,22 +1,23 @@
 from fastapi import Request
 from fastapi.responses import JSONResponse
+from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.responses import Response
-from typing import Callable, Awaitable
 import logging
 from ddos_detector import DDoSDetector
 from load_balancer import LoadBalancer
 
 logger = logging.getLogger(__name__)
 
-class DDoSProtectionMiddleware:
-    def __init__(self, ddos_detector: DDoSDetector, load_balancer: LoadBalancer):
+class DDoSProtectionMiddleware(BaseHTTPMiddleware):
+    def __init__(self, app, ddos_detector: DDoSDetector, load_balancer: LoadBalancer):
+        super().__init__(app)
         self.ddos_detector = ddos_detector
         self.load_balancer = load_balancer
         
-    async def __call__(
+    async def dispatch(
         self, 
-        request: Request, 
-        call_next: Callable[[Request], Awaitable[Response]]
+        request: Request,
+        call_next: RequestResponseEndpoint
     ) -> Response:
         try:
             # Extract request information safely
