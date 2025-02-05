@@ -1,4 +1,5 @@
-from fastapi import Request, HTTPException
+from fastapi import Request, Response
+from fastapi.responses import JSONResponse
 from typing import Callable, Awaitable
 import logging
 from ddos_detector import DDoSDetector
@@ -15,7 +16,7 @@ class DDoSProtectionMiddleware:
         self, 
         request: Request, 
         call_next: Callable[[Request], Awaitable[Response]]
-    ):
+    ) -> Response:
         try:
             # Extract request information safely
             client_host = request.client.host if request.client else "unknown"
@@ -23,18 +24,11 @@ class DDoSProtectionMiddleware:
             # Build request info dict
             request_info = {
                 "source_ip": client_host,
-                "request_per_second": 1,
+                "request_per_second": 1,  # This will be calculated based on time window
                 "bytes_transferred": 0,
                 "connection_duration": 0,
                 "syn_count": 0
             }
-            
-            # Try to get body size if available
-            try:
-                body = await request.body()
-                request_info["bytes_transferred"] = len(body)
-            except Exception:
-                logger.debug("Could not read request body")
             
             # Check for DDoS attack
             if self.ddos_detector.is_attack(request_info):
@@ -46,11 +40,11 @@ class DDoSProtectionMiddleware:
             
             # Apply load balancing
             distribution = self.load_balancer.distribute_request()
-            if distribution["status"] == "rejected":
-                logger.warning(f"Request rejected: {distribution['reason']}")
+            if distribution.get("status") == "rejected":
+                logger.warning(f"Request rejected: {distribution.get('reason')}")
                 return JSONResponse(
                     status_code=503,
-                    content={"detail": distribution["reason"]}
+                    content={"detail": distribution.get("reason")}
                 )
             
             # Process the request

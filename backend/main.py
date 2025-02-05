@@ -4,8 +4,8 @@ from fastapi.responses import JSONResponse
 import uvicorn
 from datetime import datetime
 import random
-from typing import Dict
 import logging
+from typing import Dict
 from ddos_detector import DDoSDetector
 from load_balancer import LoadBalancer
 from recovery_system import RecoverySystem
@@ -54,22 +54,28 @@ async def get_traffic() -> Dict:
     try:
         current_traffic = random.randint(50, 1000)
         
-        is_attack = ddos_detector.is_attack({
+        request_info = {
             "source_ip": "0.0.0.0",
             "request_per_second": current_traffic,
             "bytes_transferred": random.randint(1000, 10000),
             "connection_duration": random.randint(1, 10),
             "syn_count": random.randint(0, 150)
-        })
+        }
+        
+        is_attack = ddos_detector.is_attack(request_info)
         
         return {
             "traffic_level": current_traffic,
             "is_attack": is_attack,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
+            "attack_stats": ddos_detector.get_attack_stats()
         }
     except Exception as e:
         logger.error(f"Error getting traffic data: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        return JSONResponse(
+            status_code=500,
+            content={"detail": str(e)}
+        )
 
 @app.get("/api/system-metrics")
 async def get_system_metrics() -> Dict:
