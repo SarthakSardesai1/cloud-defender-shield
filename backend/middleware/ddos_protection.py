@@ -1,5 +1,6 @@
-from fastapi import Request, Response
+from fastapi import Request
 from fastapi.responses import JSONResponse
+from starlette.responses import Response
 from typing import Callable, Awaitable
 import logging
 from ddos_detector import DDoSDetector
