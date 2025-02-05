@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
@@ -18,11 +19,13 @@ interface TrafficData {
   timestamp: string;
 }
 
+const BACKEND_URL = 'http://localhost:8000';
+
 const DDoSDetection = () => {
-  const { data: trafficData } = useQuery<TrafficData>({
+  const { data: trafficData } = useQuery({
     queryKey: ['traffic'],
     queryFn: async () => {
-      const response = await fetch('/api/traffic');
+      const response = await fetch(`${BACKEND_URL}/api/traffic`);
       if (!response.ok) {
         throw new Error('Failed to fetch traffic data');
       }
@@ -31,10 +34,10 @@ const DDoSDetection = () => {
     refetchInterval: 2000
   });
 
-  const { data: systemStatus } = useQuery<SystemStatus>({
+  const { data: systemStatus } = useQuery({
     queryKey: ['system-status'],
     queryFn: async () => {
-      const response = await fetch('/api/system-status');
+      const response = await fetch(`${BACKEND_URL}/api/system-metrics`);
       if (!response.ok) {
         throw new Error('Failed to fetch system status');
       }

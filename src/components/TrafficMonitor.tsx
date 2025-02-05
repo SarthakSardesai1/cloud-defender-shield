@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useQuery } from '@tanstack/react-query';
@@ -16,6 +17,8 @@ interface TrafficData {
   };
 }
 
+const BACKEND_URL = 'http://localhost:8000';
+
 const TrafficMonitor = () => {
   const [trafficHistory, setTrafficHistory] = useState<TrafficData[]>([]);
   const { toast } = useToast();
@@ -25,7 +28,7 @@ const TrafficMonitor = () => {
     queryKey: ['traffic'],
     queryFn: async () => {
       try {
-        const response = await fetch('/api/traffic');
+        const response = await fetch(`${BACKEND_URL}/api/traffic`);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
