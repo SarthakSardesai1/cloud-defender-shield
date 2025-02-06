@@ -1,3 +1,4 @@
+
 from collections import defaultdict
 import time
 import logging
@@ -10,7 +11,7 @@ class DefenseMechanisms:
         self.connection_tracker: Dict[str, List[float]] = defaultdict(list)
         self.blacklist_duration = 300  # 5 minutes
         self.rate_limit_window = 60  # 1 minute
-        self.max_requests_per_window = 100  # Reduced from 1000 to 100 for demonstration
+        self.max_requests_per_window = 1000  # Increased from 100 to 1000 for normal usage
         
     def _apply_defense(self, ip: str, attack_type: str) -> None:
         if not ip or ip == 'unknown':
@@ -53,3 +54,4 @@ class DefenseMechanisms:
         
     def is_blacklisted(self, ip: str) -> bool:
         return ip in self.blacklist
+
