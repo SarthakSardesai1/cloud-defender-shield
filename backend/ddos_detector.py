@@ -34,7 +34,7 @@ class DDoSDetector:
                 logging.info(f"Blocked request from blacklisted IP: {ip}")
                 return True
             
-            # Check rate limits - More sensitive threshold
+            # Check rate limits - More reasonable threshold
             if self.defense.check_rate_limit(ip):
                 self._update_attack_stats('rate_limit_exceeded')
                 self.defense._apply_defense(ip, 'rate_limit_exceeded')
@@ -43,22 +43,22 @@ class DDoSDetector:
             features = self.detector.extract_features(request)
             self.detector.request_window.append(features)
             
-            # DEMONSTRATION MODE: Much more sensitive thresholds
-            # Volume-based attack detection
-            if features[0] > 50:  # Reduced from 100 to 50 RPS for demo
+            # Adjusted thresholds for normal operation
+            # Volume-based attack detection - increased thresholds
+            if features[0] > 200:  # Increased from 50 to 200 RPS
                 self._update_attack_stats('http_flood')
                 self.defense._apply_defense(ip, 'http_flood')
                 self._log_attack(request, 1.0, "High RPS detected")
                 return True
                 
-            if features[1] > 50000:  # Reduced from 100000 to 50000 bytes
+            if features[1] > 200000:  # Increased from 50000 to 200000 bytes
                 self._update_attack_stats('bandwidth_flood')
                 self.defense._apply_defense(ip, 'bandwidth_flood')
                 self._log_attack(request, 1.0, "High bandwidth usage detected")
                 return True
 
-            # SYN flood detection - More sensitive
-            if request.get('syn_count', 0) > 30:  # Reduced from 50 to 30
+            # SYN flood detection - increased threshold
+            if request.get('syn_count', 0) > 100:  # Increased from 30 to 100
                 self._update_attack_stats('syn_flood')
                 self.defense._apply_defense(ip, 'syn_flood')
                 self._log_attack(request, 1.0, "SYN flood detected")
@@ -71,15 +71,15 @@ class DDoSDetector:
                     self._update_attack_stats('statistical_anomaly')
                 return is_attack
                 
-            # LSTM-based detection
+            # LSTM-based detection with adjusted threshold
             X = self.detector.prepare_sequence_data()
             if X is None:
                 return self.detector.basic_detection(features)
                 
             prediction = self.detector.model.predict(X, verbose=0)[0][0]
             
-            # Lower threshold for demonstration
-            if prediction > 0.4:  # Reduced from 0.6 to 0.4
+            # Increased threshold for ML detection
+            if prediction > 0.8:  # Increased from 0.4 to 0.8
                 self._update_attack_stats('ml_detected')
                 self.defense._apply_defense(ip, 'anomaly_detected')
                 self._log_attack(request, prediction, "LSTM model detected anomaly")
