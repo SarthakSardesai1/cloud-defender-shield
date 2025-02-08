@@ -1,3 +1,4 @@
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -52,14 +53,17 @@ app.add_middleware(DDoSProtectionMiddleware, ddos_detector=ddos_detector, load_b
 async def get_traffic() -> Dict:
     """Get current traffic metrics and attack status"""
     try:
-        current_traffic = random.randint(50, 1000)
+        # Generate more realistic traffic levels (5-100 RPS for normal traffic)
+        current_traffic = random.randint(5, 100)
         
         request_info = {
             "source_ip": "0.0.0.0",
             "request_per_second": current_traffic,
-            "bytes_transferred": random.randint(1000, 10000),
-            "connection_duration": random.randint(1, 10),
-            "syn_count": random.randint(0, 150)
+            # Reduced bytes transferred for normal traffic
+            "bytes_transferred": random.randint(100, 5000),
+            "connection_duration": random.randint(1, 5),
+            # Reduced SYN count for normal traffic
+            "syn_count": random.randint(0, 10)
         }
         
         is_attack = ddos_detector.is_attack(request_info)
@@ -93,11 +97,11 @@ async def get_system_metrics() -> Dict:
             },
             "optimization_metrics": optimization_metrics,
             "system_status": {
-                "cpu_usage": random.randint(20, 80),
-                "memory_usage": random.randint(30, 90),
+                "cpu_usage": random.randint(20, 60),  # More realistic CPU usage
+                "memory_usage": random.randint(30, 70),  # More realistic memory usage
                 "network_load": load_balancer.get_average_load(),
                 "active_servers": sum(1 for healthy in load_balancer.server_health.values() if healthy),
-                "response_time": random.randint(10, 50)
+                "response_time": random.randint(5, 30)  # More realistic response times
             }
         }
     except Exception as e:
