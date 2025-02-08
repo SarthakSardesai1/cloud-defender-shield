@@ -11,15 +11,16 @@ class DefenseMechanisms:
         self.connection_tracker: Dict[str, List[float]] = defaultdict(list)
         self.blacklist_duration = 300  # 5 minutes
         self.rate_limit_window = 60  # 1 minute
-        self.max_requests_per_window = 5000  # Extremely high threshold for normal usage
+        self.max_requests_per_window = 1000  # Lowered from 5000
         
     def _apply_defense(self, ip: str, attack_type: str) -> None:
         if not ip or ip == 'unknown':
             return
             
         current_time = time.time()
+        logging.info(f"Applying defense for IP {ip} due to {attack_type}")
         
-        if attack_type in ['syn_flood', 'http_flood']:
+        if attack_type in ['syn_flood', 'http_flood', 'sustained_attack']:
             self.blacklist.add(ip)
             logging.info(f"IP {ip} blacklisted for {attack_type}")
             
