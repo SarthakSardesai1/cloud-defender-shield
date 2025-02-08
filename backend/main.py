@@ -1,4 +1,3 @@
-
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -53,17 +52,17 @@ app.add_middleware(DDoSProtectionMiddleware, ddos_detector=ddos_detector, load_b
 async def get_traffic() -> Dict:
     """Get current traffic metrics and attack status"""
     try:
-        # Generate more realistic traffic levels (5-100 RPS for normal traffic)
-        current_traffic = random.randint(5, 100)
+        # Generate very low baseline traffic (1-20 RPS for normal traffic)
+        current_traffic = random.randint(1, 20)
         
         request_info = {
             "source_ip": "0.0.0.0",
             "request_per_second": current_traffic,
-            # Reduced bytes transferred for normal traffic
-            "bytes_transferred": random.randint(100, 5000),
-            "connection_duration": random.randint(1, 5),
-            # Reduced SYN count for normal traffic
-            "syn_count": random.randint(0, 10)
+            # Very low baseline bandwidth
+            "bytes_transferred": random.randint(100, 2000),
+            "connection_duration": random.randint(1, 3),
+            # Minimal SYN count for normal traffic
+            "syn_count": random.randint(0, 5)
         }
         
         is_attack = ddos_detector.is_attack(request_info)

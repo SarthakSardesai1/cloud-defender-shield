@@ -11,7 +11,7 @@ class DefenseMechanisms:
         self.connection_tracker: Dict[str, List[float]] = defaultdict(list)
         self.blacklist_duration = 300  # 5 minutes
         self.rate_limit_window = 60  # 1 minute
-        self.max_requests_per_window = 1000  # Increased from 100 to 1000 for normal usage
+        self.max_requests_per_window = 5000  # Extremely high threshold for normal usage
         
     def _apply_defense(self, ip: str, attack_type: str) -> None:
         if not ip or ip == 'unknown':
