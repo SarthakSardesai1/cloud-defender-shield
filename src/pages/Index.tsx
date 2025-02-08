@@ -1,8 +1,10 @@
+
 import React from 'react';
 import TrafficMonitor from '../components/TrafficMonitor';
 import DDoSDetection from '../components/DDoSDetection';
 import SystemStatus from '../components/SystemStatus';
 import AttackLogs from '../components/AttackLogs';
+import AttackSimulator from '../components/AttackSimulator';
 import { Card } from '@/components/ui/card';
 
 const Index = () => {
@@ -28,6 +30,10 @@ const Index = () => {
         
         <Card className="bg-cyber-dark/80 p-6 rounded-lg border border-cyber-accent/20">
           <AttackLogs />
+        </Card>
+
+        <Card className="bg-cyber-dark/80 p-6 rounded-lg border border-cyber-accent/20 md:col-span-2">
+          <AttackSimulator />
         </Card>
       </div>
     </div>

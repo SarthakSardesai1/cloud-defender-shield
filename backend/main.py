@@ -1,3 +1,4 @@
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -49,21 +50,38 @@ app.add_middleware(
 app.add_middleware(DDoSProtectionMiddleware, ddos_detector=ddos_detector, load_balancer=load_balancer)
 
 @app.get("/api/traffic")
-async def get_traffic() -> Dict:
+async def get_traffic(request: Request) -> Dict:
     """Get current traffic metrics and attack status"""
     try:
-        # Generate very low baseline traffic (1-20 RPS for normal traffic)
-        current_traffic = random.randint(1, 20)
+        # Check for test headers
+        is_test = request.headers.get("x-test-attack", "false").lower() == "true"
+        attack_type = request.headers.get("x-attack-type", "")
+        attack_intensity = int(request.headers.get("x-attack-intensity", "0"))
         
-        request_info = {
-            "source_ip": "0.0.0.0",
-            "request_per_second": current_traffic,
-            # Very low baseline bandwidth
-            "bytes_transferred": random.randint(100, 2000),
-            "connection_duration": random.randint(1, 3),
-            # Minimal SYN count for normal traffic
-            "syn_count": random.randint(0, 5)
-        }
+        if is_test:
+            # Simulate attack traffic based on intensity
+            current_traffic = int(50 + (attack_intensity * 20))  # Scale with intensity
+            bytes_transferred = int(1000 + (attack_intensity * 1000))
+            syn_count = int(attack_intensity * 5) if attack_type == "syn_flood" else 0
+            
+            request_info = {
+                "source_ip": "127.0.0.1",
+                "request_per_second": current_traffic,
+                "bytes_transferred": bytes_transferred,
+                "connection_duration": random.randint(1, 3),
+                "syn_count": syn_count
+            }
+        else:
+            # Generate very low baseline traffic (1-20 RPS for normal traffic)
+            current_traffic = random.randint(1, 20)
+            
+            request_info = {
+                "source_ip": "0.0.0.0",
+                "request_per_second": current_traffic,
+                "bytes_transferred": random.randint(100, 2000),
+                "connection_duration": random.randint(1, 3),
+                "syn_count": random.randint(0, 5)
+            }
         
         is_attack = ddos_detector.is_attack(request_info)
         
@@ -96,11 +114,11 @@ async def get_system_metrics() -> Dict:
             },
             "optimization_metrics": optimization_metrics,
             "system_status": {
-                "cpu_usage": random.randint(20, 60),  # More realistic CPU usage
-                "memory_usage": random.randint(30, 70),  # More realistic memory usage
+                "cpu_usage": random.randint(20, 60),
+                "memory_usage": random.randint(30, 70),
                 "network_load": load_balancer.get_average_load(),
                 "active_servers": sum(1 for healthy in load_balancer.server_health.values() if healthy),
-                "response_time": random.randint(5, 30)  # More realistic response times
+                "response_time": random.randint(5, 30)
             }
         }
     except Exception as e:
