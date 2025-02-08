@@ -10,7 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
-import { Play, Stop } from 'lucide-react';
+import { Play, Square } from 'lucide-react';
 import { useToast } from "@/components/ui/use-toast";
 
 const BACKEND_URL = 'http://localhost:8000';
@@ -126,7 +126,7 @@ const AttackSimulator = () => {
               variant="outline"
               className="border-red-500 text-red-500 hover:bg-red-950"
             >
-              <Stop className="w-4 h-4 mr-2" />
+              <Square className="w-4 h-4 mr-2" />
               Stop Attack
             </Button>
           )}
